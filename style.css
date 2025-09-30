@@ -19,7 +19,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-size: 16px;
+  font-size: 20px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -28,7 +28,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(to right, #2399d7, #141B41);
+  background: linear-gradient(to right, #050b2b, #050b2b);
   font-family: "PT Sans", sans-serif;
   overflow: hidden;
 }
@@ -36,7 +36,7 @@ body {
 .wrapper {
   max-width: 600px;
   background: linear-gradient(to left, #306BAC, #141B41);
-  color: #fff;
+  color: #fafe18;
   padding: 30px;
   border-radius: 20px;
   box-shadow: 0px 0px 80px 1px #212129;
@@ -82,7 +82,7 @@ body {
 }
 
 .wrapper .description {
-  color: #A1A2AD;
+  color: #fafe18;
   text-transform: uppercase;
   margin-top: 10px;
   animation: fadeIn 3s ease-in-out forwards;
@@ -90,27 +90,6 @@ body {
   animation-delay: 0.5s;
 }
 
-.wrapper .social-media {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-  animation: fadeIn 3s ease-in-out forwards;
-  opacity: 0;
-  animation-delay: 1s;
-}
-
-.wrapper .social-media a {
-  color: #fff;
-  font-size: 2em;
-  margin: 0 10px;
-  padding: 15px;
-  transition: 300ms;
-}
-
-.wrapper .social-media a:hover {
-  color: #fafe18;
-  transition: 300ms;
-}
 
 .divider {
   width: 80%;
@@ -120,7 +99,7 @@ body {
   opacity: 0.5;
 }
 
-.wrapper .mail {
+.wrapper .download-button {
   background: #fff;
   color: #212129;
   text-transform: none;
@@ -136,14 +115,14 @@ body {
   border: 2px solid transparent;
 }
 
-.wrapper .mail:hover {
+.wrapper .download-button:hover {
   background: #fafe18;
   color: #141B41;
   border-color: #141B41;
   transition: 300ms;
 }
 
-.wrapper .mail .fa-fa-envelope-o {
+.wrapper .download-button .fa-fa-download {
   margin-right: 5px;
   margin-top: 15px;
 }
@@ -162,12 +141,7 @@ body {
     font-size: 1em;
   }
 
-  .wrapper .social-media a {
-    font-size: 1.5em;
-    padding: 10px;
-  }
-
-  .wrapper .mail {
+  .wrapper .download-button {
     padding: 8px 35px;
     font-size: 1em;
   }
