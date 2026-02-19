@@ -45,6 +45,7 @@
       letter-spacing: 2px;
     }
 
+    /* BIGGER GAME BOX */
     #game {
       width: 1100px;
       height: 500px; 
@@ -56,6 +57,7 @@
       box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     }
 
+    /* BIGGER TOBY */
     #toby {
       width: 130px;
       height: 130px;
@@ -65,6 +67,7 @@
       border-radius: 20px;
     }
 
+    /* BIGGER CAT */
     #obstacle {
       width: 80px;
       height: 80px;
@@ -78,6 +81,7 @@
       animation: moveObstacle 1.8s linear infinite;
     }
 
+    /* BIGGER SAUSAGE */
     #good-item {
       width: 80px;
       height: 80px;
@@ -91,6 +95,7 @@
       animation: moveGoodItem 2.5s linear infinite;
     }
 
+    /* BIGGER SCORE */
     #score {
       position: absolute;
       top: 20px;
@@ -112,6 +117,7 @@
       line-height: 1.4;
     }
 
+    /* BIGGER JUMP */
     .animate-jump {
       animation: jump 0.5s cubic-bezier(0.21, 0.61, 0.35, 1);
     }
@@ -133,7 +139,7 @@
     }
 
     #retry-btn {
-      display: none; 
+      visibility: hidden; /* FIX: Prevents layout shift! */
       background: var(--yellow-main);
       color: #141B41;
       border: 2px solid #b8860b;
@@ -150,6 +156,7 @@
       transform: scale(1.1);
     }
 
+    /* Height matches main game box so it doesn't shrink on smaller screens! */
     @media (max-width: 950px) {
       #game { width: 95vw; height: 600px; }
     }
@@ -249,7 +256,8 @@
       goodItem.style.animation = "none";
       goodItem.style.left = window.getComputedStyle(goodItem).getPropertyValue("left");
 
-      retryBtn.style.display = "inline-block";
+      // FIX: Toggle visibility instead of display
+      retryBtn.style.visibility = "visible"; 
     }
 
     // 4. Reset Game Logic
@@ -259,7 +267,8 @@
       bonusScore = 0;
       scoreElement.innerHTML = "Score: 0";
       
-      retryBtn.style.display = "none";
+      // FIX: Toggle visibility instead of display
+      retryBtn.style.visibility = "hidden"; 
       
       obstacle.style.left = ""; 
       obstacle.style.animation = "moveObstacle 1.8s linear infinite";
