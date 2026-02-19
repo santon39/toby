@@ -31,23 +31,20 @@
       gap: 15px;
     }
 
-    .header-panel { text-align: center; }
-    .game-title { color: var(--yellow-main); margin: 0; font-size: 2.5em; letter-spacing: 2px; }
-    .game-text { font-size: 1.1em; margin: 0 0 10px 0; opacity: 0.9; }
-
     #game {
       width: 1100px;
-      height: 550px; 
+      height: 600px; 
       border-bottom: 5px solid var(--yellow-main);
       background: var(--blue-gradient);
       position: relative;
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      cursor: pointer; /* Shows the user they can click to jump */
     }
 
-    #game-over-container {
-      visibility: hidden;
+    /* OVERLAYS (Start and Game Over) */
+    .overlay {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -63,41 +60,44 @@
       align-items: center;
       gap: 20px;
       min-width: 450px;
-      box-shadow: 0 0 50px rgba(0,0,0,0.9);
     }
 
-    #game-over-msg { color: white; margin: 0; font-size: 1.8em; line-height: 1.4; }
-    #final-score-val { color: var(--yellow-main); font-weight: bold; font-size: 1.2em; }
+    #start-container { visibility: visible; }
+    #game-over-container { visibility: hidden; }
 
-    .button-group { display: flex; gap: 20px; }
     .btn {
       padding: 12px 45px;
       border-radius: 50px;
       font-weight: bold;
       font-size: 1.3em;
       cursor: pointer;
-      transition: transform 0.2s, background 0.2s;
+      transition: transform 0.2s;
       border: none;
     }
 
-    #retry-btn { background: var(--yellow-main); color: #050b2b; }
-    #no-btn { background: transparent; color: white; border: 2px solid white; }
+    #start-btn, #retry-btn { background: var(--yellow-main); color: #050b2b; }
+    #no-btn { background: transparent; color: white; border: 2px solid white; margin-left: 10px; }
     .btn:hover { transform: scale(1.1); }
-    #no-btn:hover { background: rgba(255,255,255,0.1); }
 
+    /* SPRITES */
     #toby { width: 130px; height: 130px; position: absolute; bottom: 0; left: 60px; }
     #obstacle, #good-item {
       width: 80px; height: 80px; position: absolute;
       font-size: 80px; display: flex; justify-content: center; align-items: center;
+      visibility: hidden; /* Hidden until game starts */
     }
-    #obstacle { bottom: 0; right: -80px; animation: moveObstacle 1.8s linear infinite; }
-    #good-item { bottom: 180px; right: -80px; animation: moveGoodItem 2.5s linear infinite; }
     #score { position: absolute; top: 20px; right: 30px; font-size: 32px; font-weight: bold; color: var(--yellow-main); }
 
+    /* ANIMATIONS */
     .animate-jump { animation: jump 0.5s cubic-bezier(0.21, 0.61, 0.35, 1); }
     @keyframes jump { 0% { bottom: 0; } 50% { bottom: 260px; } 100% { bottom: 0; } }
+    
+    /* Animation classes applied via JS */
+    .move-cat { animation: moveObstacle 1.8s linear infinite; visibility: visible !important; }
+    .move-sausage { animation: moveSausage 2.5s linear infinite; visibility: visible !important; }
+
     @keyframes moveObstacle { 0% { right: -80px; } 100% { right: 100%; } }
-    @keyframes moveGoodItem { 0% { right: -80px; } 100% { right: 100%; } }
+    @keyframes moveSausage { 0% { right: -80px; } 100% { right: 100%; } }
 
     @media (max-width: 950px) { #game { width: 95vw; height: 600px; } }
   </style>
@@ -105,24 +105,25 @@
 <body>
 
   <div class="game-container">
-    <div class="header-panel">
-      <h1 class="game-title">TOBY DASH</h1>
-      <p class="game-text">Avoid the Cat 🐈 and catch the Sausage 🌭</p>
-    </div>
-
     <div id="game">
       <div id="score">Score: 0</div>
       <img id="toby" src="https://santon39.github.io/toby/toby.png" alt="Toby">
       <div id="obstacle">🐈</div>
       <div id="good-item">🌭</div>
 
-      <div id="game-over-container">
+      <div id="start-container" class="overlay">
+        <h1 style="color:var(--yellow-main); margin:0;">TOBY DASH</h1>
+        <p>Press SPACE or CLICK to jump!</p>
+        <button onclick="startGame()" class="btn" id="start-btn">Start Game</button>
+      </div>
+
+      <div id="game-over-container" class="overlay">
         <h2 id="game-over-msg">
           Oh no, cats caught you 😢<br>
           Your score is: <span id="final-score-val">0</span><br>
           Wanna try again?
         </h2>
-        <div class="button-group">
+        <div>
           <button onclick="resetGame()" class="btn" id="retry-btn">Yes</button>
           <button onclick="goHome()" class="btn" id="no-btn">No</button>
         </div>
@@ -135,46 +136,58 @@
     const obstacle = document.getElementById("obstacle"); 
     const goodItem = document.getElementById("good-item"); 
     const scoreElement = document.getElementById("score");
+    const startContainer = document.getElementById("start-container");
     const gameOverContainer = document.getElementById("game-over-container");
     const finalScoreVal = document.getElementById("final-score-val");
 
-    // AUDIO SETUP
-    const jumpSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-jumping-in-a-video-game-2043.mp3");
-    const meowSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-domestic-cat-hungry-meow-45.mp3");
-    const barkSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-dog-barking-twice-1.mp3");
+    // AUDIO - Using more robust links
+    const jumpSound = new Audio("https://cdn.freesound.org/previews/458/458641_9385317-lq.mp3");
+    const meowSound = new Audio("https://cdn.freesound.org/previews/415/415209_5121236-lq.mp3");
+    const barkSound = new Audio("https://cdn.freesound.org/previews/469/469857_9481414-lq.mp3");
 
     let passiveScore = 0;
     let bonusScore = 0;
-    let isGameOver = false;
-    let audioUnlocked = false;
+    let isGameOver = true; // Game starts paused
+
+    function startGame() {
+      isGameOver = false;
+      startContainer.style.visibility = "hidden";
+      obstacle.classList.add("move-cat");
+      goodItem.classList.add("move-sausage");
+      
+      // Essential: Play a silent sound to "unlock" audio for the browser
+      jumpSound.play().then(() => {
+        jumpSound.pause();
+        jumpSound.currentTime = 0;
+      }).catch(() => {});
+    }
 
     function jump() {
       if (isGameOver) return;
-
-      // Unlock audio on first interaction
-      if (!audioUnlocked) {
-        jumpSound.play().catch(() => {});
-        audioUnlocked = true;
-      }
-
       if (!toby.classList.contains("animate-jump")) {
         jumpSound.currentTime = 0;
-        jumpSound.play().catch(e => console.log("Audio Blocked"));
+        jumpSound.play().catch(() => {});
         toby.classList.add("animate-jump");
         setTimeout(() => { toby.classList.remove("animate-jump"); }, 500);
       }
     }
 
+    // CONTROLS: Added 'mousedown' for mouse jumping!
     document.addEventListener("keydown", (e) => { if (e.code === "Space") jump(); });
-    document.addEventListener("touchstart", jump);
+    document.getElementById("game").addEventListener("mousedown", (e) => {
+        if(e.target.tagName !== 'BUTTON') jump(); 
+    });
+    document.getElementById("game").addEventListener("touchstart", (e) => {
+        if(e.target.tagName !== 'BUTTON') jump();
+    });
 
-    // FIXED: Ensure sausage comes back every loop
     goodItem.addEventListener("animationiteration", () => {
       goodItem.style.visibility = "visible"; 
     });
 
     setInterval(() => {
       if (isGameOver) return;
+      
       let tobyBottom = parseInt(window.getComputedStyle(toby).getPropertyValue("bottom"));
       let obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue("left"));
       let goodItemLeft = parseInt(window.getComputedStyle(goodItem).getPropertyValue("left"));
@@ -182,17 +195,10 @@
       let currentTotal = Math.floor(passiveScore / 10) + bonusScore;
       scoreElement.innerHTML = "Score: " + currentTotal;
 
-      // Collision with Cat
       if (obstacleLeft < 170 && obstacleLeft > 50 && tobyBottom <= 70) {
-        isGameOver = true;
-        meowSound.play().catch(() => {});
-        obstacle.style.animation = "none";
-        goodItem.style.animation = "none";
-        finalScoreVal.innerHTML = currentTotal;
-        gameOverContainer.style.visibility = "visible"; 
+        endGame(currentTotal);
       } 
       
-      // Collision with Sausage
       if (goodItemLeft < 170 && goodItemLeft > 50 && tobyBottom >= 100 && goodItem.style.visibility !== "hidden") {
         bonusScore += 50; 
         goodItem.style.visibility = "hidden"; 
@@ -202,14 +208,23 @@
       passiveScore++;
     }, 10);
 
+    function endGame(score) {
+      isGameOver = true;
+      meowSound.play().catch(() => {});
+      obstacle.classList.remove("move-cat");
+      goodItem.classList.remove("move-sausage");
+      finalScoreVal.innerHTML = score;
+      gameOverContainer.style.visibility = "visible"; 
+    }
+
     function resetGame() {
-      isGameOver = false;
+      gameOverContainer.style.visibility = "hidden";
       passiveScore = 0;
       bonusScore = 0;
       scoreElement.innerHTML = "Score: 0";
-      gameOverContainer.style.visibility = "hidden"; 
-      obstacle.style.animation = "moveObstacle 1.8s linear infinite";
-      goodItem.style.animation = "moveGoodItem 2.5s linear infinite";
+      isGameOver = false;
+      obstacle.classList.add("move-cat");
+      goodItem.classList.add("move-sausage");
       goodItem.style.visibility = "visible";
     }
 
