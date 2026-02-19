@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Toby Dash</title>
+  
   <link rel="icon" href="toby.webp" type="image/x-icon">
+
   <style>
-    /* ALL YOUR CSS */
+    /* --- CSS SECTION --- */
     :root {
       --blue-dark: #050b2b;
       --blue-gradient: linear-gradient(145deg, #141B41, #306BAC);
@@ -29,12 +31,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 15px;
+    }
+
+    .header-panel {
+      text-align: center;
+    }
+
+    .game-title {
+      color: var(--yellow-main);
+      margin: 0;
+      font-size: 2.5em;
+      letter-spacing: 2px;
     }
 
     #game {
-      width: 900px;
-      height: 400px;
+      width: 1100px;
+      height: 600px; 
       border-bottom: 5px solid var(--yellow-main);
       background: var(--blue-gradient);
       position: relative;
@@ -44,50 +57,59 @@
     }
 
     #toby {
-      width: 90px;
-      height: 90px;
+      width: 130px;
+      height: 130px;
       position: absolute;
       bottom: 0;
       left: 60px;
-      border-radius: 15px;
+      border-radius: 20px;
     }
 
     #obstacle {
-      width: 50px;
-      height: 50px;
+      width: 80px;
+      height: 80px;
       position: absolute;
       bottom: 0;
-      right: -50px;
-      font-size: 50px;
+      right: -80px;
+      font-size: 80px;
       display: flex;
       justify-content: center;
       align-items: center;
-      animation: moveObstacle 1.5s linear infinite;
+      animation: moveObstacle 1.8s linear infinite;
+    }
+
+    #good-item {
+      width: 80px;
+      height: 80px;
+      position: absolute;
+      bottom: 180px; 
+      right: -80px;
+      font-size: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: moveGoodItem 2.5s linear infinite;
     }
 
     #score {
       position: absolute;
       top: 20px;
       right: 30px;
-      font-size: 26px;
+      font-size: 32px; 
       font-weight: bold;
       color: var(--yellow-main);
       text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      z-index: 10;
     }
 
     .ui-panel {
       text-align: center;
     }
 
-    .game-title {
-      color: var(--yellow-main);
-      margin-bottom: 5px;
-      font-size: 2em;
-      letter-spacing: 2px;
-    }
-
     .game-text {
       font-size: 1.2em;
+      margin: 0 0 15px 0;
+      line-height: 1.4;
     }
 
     .animate-jump {
@@ -96,12 +118,17 @@
 
     @keyframes jump {
       0% { bottom: 0; }
-      50% { bottom: 200px; }
+      50% { bottom: 260px; } 
       100% { bottom: 0; }
     }
 
     @keyframes moveObstacle {
-      0% { right: -50px; }
+      0% { right: -80px; }
+      100% { right: 100%; }
+    }
+
+    @keyframes moveGoodItem {
+      0% { right: -80px; }
       100% { right: 100%; }
     }
 
@@ -113,9 +140,8 @@
       padding: 12px 30px;
       border-radius: 50px;
       font-weight: bold;
-      font-size: 1.1em;
+      font-size: 1.2em;
       cursor: pointer;
-      margin-top: 15px;
       transition: transform 0.2s;
       box-shadow: 0 5px 15px rgba(250, 254, 24, 0.3);
     }
@@ -125,78 +151,123 @@
     }
 
     @media (max-width: 950px) {
-      #game { width: 95vw; height: 300px; }
+      #game { width: 95vw; height: 600px; }
     }
   </style>
 </head>
 <body>
 
   <div class="game-container">
+    
+    <div class="header-panel">
+      <h1 class="game-title">TOBY DASH</h1>
+      <p class="game-text">Press <strong>SPACE</strong> or <strong>TAP</strong> to jump!<br>Avoid the Cat 🐈 and catch the Sausage 🌭</p>
+    </div>
+
     <div id="game">
       <div id="score">Score: 0</div>
+      
       <img id="toby" src="https://santon39.github.io/toby/toby.png" alt="Toby">
-      <div id="obstacle">🦴</div>
+      
+      <div id="obstacle">🐈</div>
+      
+      <div id="good-item">🌭</div>
     </div>
     
     <div class="ui-panel">
-      <h1 class="game-title">TOBY DASH</h1>
-      <p class="game-text">Press <strong>SPACE</strong> or <strong>TAP</strong> to jump!</p>
       <button onclick="resetGame()" id="retry-btn">Try Again, Senor!</button>
     </div>
+    
   </div>
 
   <script>
-    // ---JAVASCRIPT ---
     const toby = document.getElementById("toby");
-    const obstacle = document.getElementById("obstacle");
+    const obstacle = document.getElementById("obstacle"); 
+    const goodItem = document.getElementById("good-item"); 
     const scoreElement = document.getElementById("score");
     const retryBtn = document.getElementById("retry-btn");
 
-    let score = 0;
+    let passiveScore = 0;
+    let bonusScore = 0;
     let isGameOver = false;
 
+    // 1. Jump Logic
     function jump() {
       if (isGameOver) return;
       if (!toby.classList.contains("animate-jump")) {
         toby.classList.add("animate-jump");
-        setTimeout(() => { toby.classList.remove("animate-jump"); }, 500);
+        setTimeout(() => {
+          toby.classList.remove("animate-jump");
+        }, 500);
       }
     }
 
+    // Controls
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" || e.code === "ArrowUp") jump();
     });
-
     document.addEventListener("touchstart", (e) => { jump(); });
 
+    goodItem.addEventListener("animationiteration", () => {
+      goodItem.style.visibility = "visible"; 
+    });
+
+    // 2. Game Loop (Checking Hitboxes)
     let checkDead = setInterval(() => {
       if (isGameOver) return;
+
       let tobyBottom = parseInt(window.getComputedStyle(toby).getPropertyValue("bottom"));
       let obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue("left"));
+      let goodItemLeft = parseInt(window.getComputedStyle(goodItem).getPropertyValue("left"));
 
-      if (obstacleLeft < 140 && obstacleLeft > 50 && tobyBottom <= 45) {
+      // --- HIT THE CAT ---
+      if (obstacleLeft < 170 && obstacleLeft > 50 && tobyBottom <= 70) {
         gameOver();
-      } else {
-        score++;
-        scoreElement.innerHTML = "Score: " + Math.floor(score / 10);
+        return;
+      } 
+      
+      // --- HIT THE SAUSAGE ---
+      if (goodItemLeft < 170 && goodItemLeft > 50 && tobyBottom >= 100 && goodItem.style.visibility !== "hidden") {
+        bonusScore += 50; 
+        goodItem.style.visibility = "hidden"; 
       }
+
+      // --- UPDATE SCORE ---
+      passiveScore++;
+      let totalScore = Math.floor(passiveScore / 10) + bonusScore;
+      scoreElement.innerHTML = "Score: " + totalScore;
+      
     }, 10);
 
+    // 3. Game Over Logic
     function gameOver() {
       isGameOver = true;
+      
       obstacle.style.animation = "none";
-      let currentLeft = window.getComputedStyle(obstacle).getPropertyValue("left");
-      obstacle.style.left = currentLeft; 
+      obstacle.style.left = window.getComputedStyle(obstacle).getPropertyValue("left"); 
+      
+      goodItem.style.animation = "none";
+      goodItem.style.left = window.getComputedStyle(goodItem).getPropertyValue("left");
+
       retryBtn.style.display = "inline-block";
     }
 
+    // 4. Reset Game Logic
     function resetGame() {
       isGameOver = false;
-      score = 0;
+      passiveScore = 0;
+      bonusScore = 0;
       scoreElement.innerHTML = "Score: 0";
+      
       retryBtn.style.display = "none";
+      
       obstacle.style.left = ""; 
-      obstacle.style.animation = "moveObstacle 1.5s linear infinite";
+      obstacle.style.animation = "moveObstacle 1.8s linear infinite";
+      
+      goodItem.style.left = "";
+      goodItem.style.animation = "moveGoodItem 2.5s linear infinite";
+      goodItem.style.visibility = "visible";
+      
       toby.classList.remove("animate-jump");
     }
   </script>
