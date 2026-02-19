@@ -7,14 +7,13 @@
   <link rel="icon" href="toby.webp" type="image/x-icon">
   <style>
     :root {
-      --blue-dark: #050b2b;
       --blue-gradient: linear-gradient(145deg, #141B41, #306BAC);
       --yellow-main: #fafe18;
     }
 
     body {
       margin: 0;
-      background: radial-gradient(circle at center, #141B41 0%, #050b2b 100%);
+      background: #050b2b;
       color: white;
       font-family: 'PT Sans', sans-serif;
       display: flex;
@@ -24,198 +23,209 @@
       overflow: hidden;
     }
 
-    .game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .header-panel { text-align: center; }
-    .game-title { color: var(--yellow-main); margin: 0; font-size: 2.5em; letter-spacing: 2px; }
-    .game-text { font-size: 1.1em; margin: 0 0 10px 0; opacity: 0.9; }
-
     #game {
       width: 1100px;
       height: 600px; 
-      border-bottom: 5px solid var(--yellow-main);
       background: var(--blue-gradient);
       position: relative;
       border-radius: 20px;
       overflow: hidden;
+      border-bottom: 5px solid var(--yellow-main);
       box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      cursor: pointer;
     }
 
-    #game-over-container {
-      visibility: hidden;
+    /* OVERLAYS */
+    .overlay {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(5, 11, 43, 0.95);
-      padding: 40px;
-      border-radius: 20px;
-      border: 3px solid var(--yellow-main);
-      text-align: center;
-      z-index: 100;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(5, 11, 43, 0.9);
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 20px;
-      min-width: 450px;
-      box-shadow: 0 0 50px rgba(0,0,0,0.9);
+      z-index: 100;
+      text-align: center;
     }
 
-    #game-over-msg { color: white; margin: 0; font-size: 1.8em; line-height: 1.4; }
-    #final-score-val { color: var(--yellow-main); font-weight: bold; font-size: 1.2em; }
+    #game-over-container { display: none; }
 
-    .button-group { display: flex; gap: 20px; }
     .btn {
-      padding: 12px 45px;
+      padding: 15px 50px;
       border-radius: 50px;
       font-weight: bold;
-      font-size: 1.3em;
+      font-size: 1.4em;
       cursor: pointer;
-      transition: transform 0.2s, background 0.2s;
       border: none;
+      margin: 10px;
+      transition: transform 0.2s;
     }
 
-    #retry-btn { background: var(--yellow-main); color: #050b2b; }
-    #no-btn { background: transparent; color: white; border: 2px solid white; }
-    .btn:hover { transform: scale(1.1); }
-    #no-btn:hover { background: rgba(255,255,255,0.1); }
+    .btn-yellow { background: var(--yellow-main); color: #050b2b; }
+    .btn-outline { background: transparent; border: 2px solid white; color: white; }
+    .btn:hover { transform: scale(1.05); }
 
-    #toby { width: 130px; height: 130px; position: absolute; bottom: 0; left: 60px; }
-    #obstacle, #good-item {
-      width: 80px; height: 80px; position: absolute;
-      font-size: 80px; display: flex; justify-content: center; align-items: center;
+    /* SPRITES */
+    #toby {
+      width: 130px;
+      height: 130px;
+      position: absolute;
+      bottom: 0; /* Ground level */
+      left: 60px;
+      z-index: 10;
     }
-    #obstacle { bottom: 0; right: -80px; animation: moveObstacle 1.8s linear infinite; }
-    #good-item { bottom: 180px; right: -80px; animation: moveGoodItem 2.5s linear infinite; }
-    #score { position: absolute; top: 20px; right: 30px; font-size: 32px; font-weight: bold; color: var(--yellow-main); }
 
-    .animate-jump { animation: jump 0.5s cubic-bezier(0.21, 0.61, 0.35, 1); }
-    @keyframes jump { 0% { bottom: 0; } 50% { bottom: 260px; } 100% { bottom: 0; } }
-    @keyframes moveObstacle { 0% { right: -80px; } 100% { right: 100%; } }
-    @keyframes moveGoodItem { 0% { right: -80px; } 100% { right: 100%; } }
+    .item {
+      width: 80px;
+      height: 80px;
+      position: absolute;
+      font-size: 70px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      right: -100px;
+    }
 
-    @media (max-width: 950px) { #game { width: 95vw; height: 600px; } }
+    #score {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 36px;
+      font-weight: bold;
+      color: var(--yellow-main);
+    }
+
+    /* ANIMATIONS */
+    .animate-jump { animation: jump 0.6s cubic-bezier(0.21, 0.61, 0.35, 1); }
+    @keyframes jump {
+      0% { bottom: 0; }
+      50% { bottom: 280px; }
+      100% { bottom: 0; }
+    }
+
+    .move-item { animation: moveLeft 2s linear infinite; }
+    @keyframes moveLeft {
+      from { right: -100px; }
+      to { right: 110%; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="game-container">
-    <div class="header-panel">
-      <h1 class="game-title">TOBY DASH</h1>
-      <p class="game-text">Avoid the Cat 🐈 and catch the Sausage 🌭</p>
+  <div id="game">
+    <div id="score">Score: 0</div>
+    
+    <img id="toby" src="https://santon39.github.io/toby/toby.png" alt="Toby">
+    
+    <div id="obstacle" class="item" style="bottom: 0;">🐈</div>
+    <div id="good-item" class="item" style="bottom: 200px;">🌭</div>
+
+    <div id="start-container" class="overlay">
+      <h1 style="color:var(--yellow-main); font-size: 4em; margin-bottom: 0;">TOBY DASH</h1>
+      <p style="font-size: 1.5em;">Avoid Cats, Eat Sausages!</p>
+      <button class="btn btn-yellow" onclick="initGame()">START GAME</button>
     </div>
 
-    <div id="game">
-      <div id="score">Score: 0</div>
-      <img id="toby" src="https://santon39.github.io/toby/toby.png" alt="Toby">
-      <div id="obstacle">🐈</div>
-      <div id="good-item">🌭</div>
-
-      <div id="game-over-container">
-        <h2 id="game-over-msg">
-          Oh no, cats caught you 😢<br>
-          Your score is: <span id="final-score-val">0</span><br>
-          Wanna try again?
-        </h2>
-        <div class="button-group">
-          <button onclick="resetGame()" class="btn" id="retry-btn">Yes</button>
-          <button onclick="goHome()" class="btn" id="no-btn">No</button>
-        </div>
+    <div id="game-over-container" class="overlay">
+      <h2 style="font-size: 2.5em; margin-bottom: 0;">Oh no, cats caught you 😢</h2>
+      <h3 style="font-size: 1.8em;">Your Score: <span id="final-score" style="color:var(--yellow-main);">0</span></h3>
+      <div style="display:flex;">
+        <button class="btn btn-yellow" onclick="initGame()">YES</button>
+        <button class="btn btn-outline" onclick="window.location.href='https://santon39.github.io/toby/index.html'">NO</button>
       </div>
     </div>
   </div>
 
-  <script>
-    const toby = document.getElementById("toby");
-    const obstacle = document.getElementById("obstacle"); 
-    const goodItem = document.getElementById("good-item"); 
-    const scoreElement = document.getElementById("score");
-    const gameOverContainer = document.getElementById("game-over-container");
-    const finalScoreVal = document.getElementById("final-score-val");
+<script>
+  const toby = document.getElementById("toby");
+  const cat = document.getElementById("obstacle");
+  const sausage = document.getElementById("good-item");
+  const scoreDisplay = document.getElementById("score");
+  const startScreen = document.getElementById("start-container");
+  const overScreen = document.getElementById("game-over-container");
+  const finalScoreVal = document.getElementById("final-score");
 
-    // AUDIO SETUP
-    const jumpSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-jumping-in-a-video-game-2043.mp3");
-    const meowSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-domestic-cat-hungry-meow-45.mp3");
-    const barkSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-dog-barking-twice-1.mp3");
+  // Robust Audio Links
+  const sndJump = new Audio("https://cdn.freesound.org/previews/458/458641_9385317-lq.mp3");
+  const sndMeow = new Audio("https://cdn.freesound.org/previews/415/415209_5121236-lq.mp3");
+  const sndBark = new Audio("https://cdn.freesound.org/previews/469/469857_9481414-lq.mp3");
 
-    let passiveScore = 0;
-    let bonusScore = 0;
-    let isGameOver = false;
-    let audioUnlocked = false;
+  let score = 0;
+  let active = false;
 
-    function jump() {
-      if (isGameOver) return;
+  function initGame() {
+    // 1. Reset variables
+    score = 0;
+    active = true;
+    scoreDisplay.innerText = "Score: 0";
+    
+    // 2. Clear overlays
+    startScreen.style.display = "none";
+    overScreen.style.display = "none";
+    
+    // 3. Reset animations
+    cat.classList.add("move-item");
+    sausage.classList.add("move-item");
+    sausage.style.visibility = "visible";
 
-      // Unlock audio on first interaction
-      if (!audioUnlocked) {
-        jumpSound.play().catch(() => {});
-        audioUnlocked = true;
-      }
+    // 4. Force audio context unlock
+    sndJump.play().then(() => { sndJump.pause(); sndJump.currentTime = 0; }).catch(() => {});
+  }
 
-      if (!toby.classList.contains("animate-jump")) {
-        jumpSound.currentTime = 0;
-        jumpSound.play().catch(e => console.log("Audio Blocked"));
-        toby.classList.add("animate-jump");
-        setTimeout(() => { toby.classList.remove("animate-jump"); }, 500);
-      }
+  function jump() {
+    if (!active || toby.classList.contains("animate-jump")) return;
+    sndJump.currentTime = 0;
+    sndJump.play().catch(() => {});
+    toby.classList.add("animate-jump");
+    setTimeout(() => toby.classList.remove("animate-jump"), 600);
+  }
+
+  // CONTROLS
+  window.addEventListener("keydown", (e) => { if (e.code === "Space") jump(); });
+  document.getElementById("game").addEventListener("mousedown", (e) => {
+    if (e.target.tagName !== "BUTTON") jump();
+  });
+
+  // GAME LOOP
+  setInterval(() => {
+    if (!active) return;
+
+    const tRect = toby.getBoundingClientRect();
+    const cRect = cat.getBoundingClientRect();
+    const sRect = sausage.getBoundingClientRect();
+
+    // Collision: Cat (Bad)
+    // We check if the rectangles overlap
+    if (tRect.right > cRect.left + 30 && tRect.left < cRect.right - 30 && tRect.bottom > cRect.top + 30) {
+      gameOver();
     }
 
-    document.addEventListener("keydown", (e) => { if (e.code === "Space") jump(); });
-    document.addEventListener("touchstart", jump);
-
-    // FIXED: Ensure sausage comes back every loop
-    goodItem.addEventListener("animationiteration", () => {
-      goodItem.style.visibility = "visible"; 
-    });
-
-    setInterval(() => {
-      if (isGameOver) return;
-      let tobyBottom = parseInt(window.getComputedStyle(toby).getPropertyValue("bottom"));
-      let obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue("left"));
-      let goodItemLeft = parseInt(window.getComputedStyle(goodItem).getPropertyValue("left"));
-
-      let currentTotal = Math.floor(passiveScore / 10) + bonusScore;
-      scoreElement.innerHTML = "Score: " + currentTotal;
-
-      // Collision with Cat
-      if (obstacleLeft < 170 && obstacleLeft > 50 && tobyBottom <= 70) {
-        isGameOver = true;
-        meowSound.play().catch(() => {});
-        obstacle.style.animation = "none";
-        goodItem.style.animation = "none";
-        finalScoreVal.innerHTML = currentTotal;
-        gameOverContainer.style.visibility = "visible"; 
-      } 
-      
-      // Collision with Sausage
-      if (goodItemLeft < 170 && goodItemLeft > 50 && tobyBottom >= 100 && goodItem.style.visibility !== "hidden") {
-        bonusScore += 50; 
-        goodItem.style.visibility = "hidden"; 
-        barkSound.currentTime = 0;
-        barkSound.play().catch(() => {});
-      }
-      passiveScore++;
-    }, 10);
-
-    function resetGame() {
-      isGameOver = false;
-      passiveScore = 0;
-      bonusScore = 0;
-      scoreElement.innerHTML = "Score: 0";
-      gameOverContainer.style.visibility = "hidden"; 
-      obstacle.style.animation = "moveObstacle 1.8s linear infinite";
-      goodItem.style.animation = "moveGoodItem 2.5s linear infinite";
-      goodItem.style.visibility = "visible";
+    // Collision: Sausage (Good)
+    if (sausage.style.visibility !== "hidden" &&
+        tRect.right > sRect.left && tRect.left < sRect.right && tRect.top < sRect.bottom && tRect.bottom > sRect.top) {
+      score += 50;
+      sausage.style.visibility = "hidden";
+      sndBark.currentTime = 0;
+      sndBark.play().catch(() => {});
     }
 
-    function goHome() {
-      window.location.href = "https://santon39.github.io/toby/index.html";
-    }
-  </script>
+    score++;
+    scoreDisplay.innerText = "Score: " + Math.floor(score / 5);
+  }, 20);
+
+  function gameOver() {
+    active = false;
+    sndMeow.play().catch(() => {});
+    cat.classList.remove("move-item");
+    sausage.classList.remove("move-item");
+    finalScoreVal.innerText = Math.floor(score / 5);
+    overScreen.style.display = "flex";
+  }
+
+  // Ensure sausage reappears
+  sausage.addEventListener("animationiteration", () => {
+    sausage.style.visibility = "visible";
+  });
+</script>
 </body>
 </html>
