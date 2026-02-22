@@ -76,7 +76,6 @@
 
     #game-over-msg { color: white; margin: 0; font-size: 1.8em; line-height: 1.2; }
 
-    /* YES / NO BUTTON STYLES */
     .button-group {
       display: flex;
       gap: 20px;
@@ -112,6 +111,7 @@
       left: 100px;
       top: 250px;
       z-index: 10;
+      /* Removed CSS transition so JS can control rotation frame-by-frame smoothly */
     }
 
     /* CLASSIC GREEN PIPES */
@@ -125,7 +125,6 @@
       box-sizing: border-box; 
     }
 
-    /* SCORE UPDATED FOR THE BRIGHT SKY */
     #score {
       position: absolute;
       top: 20px;
@@ -157,12 +156,12 @@
       
       <div id="start-screen" class="overlay">
         <h1 style="color:var(--yellow-main); font-size: 3em; margin: 0;">READY?</h1>
-        <button onclick="startGame()" class="btn">Start Game</button>
+        <button onclick="startGame(event)" class="btn">Start Game</button>
       </div>
 
       <div id="game-over-container" class="overlay">
-        <h2 id="game-over-msg">Oh no, you lost! 😢</h2>
-        <h3 style="color: white; font-size: 1.5em; margin: 0;">Your score is: <span id="final-score" style="color: var(--yellow-main);">0</span></h3>
+        <h2 id="game-over-msg">Oh no, you hit a pipe! 😢</h2>
+        <h3 style="color: white; font-size: 1.5em; margin: 0;">Score: <span id="final-score" style="color: var(--yellow-main);">0</span></h3>
         <h3 style="color: white; font-size: 1.3em; margin: 5px 0 15px 0;">Wanna try again?</h3>
         
         <div class="button-group">
@@ -184,19 +183,24 @@
     let tobyTop = 230;
     let gravity = 0.25; 
     let velocity = 0;
-    let isGameOver = true;
     let score = 0;
     let pipeSpeed = 3.5; 
     let pipeInterval; 
+    
+    // NEW LOGIC: Two stages of death
+    let isDead = true;     // True if you hit a pipe (stops flapping/pipes)
+    let isGrounded = true; // True if you hit the floor (triggers UI)
 
-    function startGame() {
-        isGameOver = false;
+    function startGame(e) {
+        if (e) e.stopPropagation();
+        
+        isDead = false;
+        isGrounded = false;
         tobyTop = 230; 
         velocity = 0;  
         score = 0;
         scoreDisplay.innerText = "Score: 0";
-        
-        toby.style.transform = "none";
+        toby.style.transform = "rotate(0deg)";
         
         startScreen.style.visibility = 'hidden';
         gameOverContainer.style.visibility = 'hidden';
@@ -211,8 +215,7 @@
     }
 
     function resetGame(e) {
-        if (e) e.stopPropagation(); 
-        startGame();
+        startGame(e);
     }
 
     function goHome(e) {
@@ -221,7 +224,8 @@
     }
 
     function flap(e) {
-        if (isGameOver) return;
+        // You can't flap if you hit a pipe or hit the ground!
+        if (isDead || isGrounded) return;
         if (e && e.target.tagName === 'BUTTON') return; 
         
         velocity = -6; 
@@ -233,28 +237,50 @@
     game.addEventListener('mousedown', flap);
     game.addEventListener('touchstart', flap);
 
+    // THE PHYSICS LOOP
     function gameLoop() {
-        if (isGameOver) return;
+        if (isGrounded) return; // Stop completely ONLY when on the floor
 
         velocity += gravity;
-        
-        // Terminal velocity: Toby won't fall like a rocket anymore!
-        if (velocity > 4.5) {
-            velocity = 4.5;
-        }
+        if (velocity > 4.5) velocity = 4.5; // Terminal velocity limit
         
         tobyTop += velocity;
         toby.style.top = tobyTop + 'px';
 
-        if (tobyTop > 520 || tobyTop < 0) {
-            endGame();
+        // CLASSIC FLAPPY ROTATION
+        if (!isDead) {
+            if (velocity > 2) {
+                // If falling fast, start tilting down (max 90 degrees)
+                let angle = Math.min(90, (velocity - 2) * 15);
+                toby.style.transform = `rotate(${angle}deg)`;
+            } else {
+                // Looking up when jumping or floating
+                toby.style.transform = "rotate(-20deg)";
+            }
+        } else {
+            // If dead, plunge face-first!
+            toby.style.transform = "rotate(90deg)";
+        }
+
+        // FLOOR COLLISION
+        if (tobyTop > 520) {
+            tobyTop = 520;
+            toby.style.top = tobyTop + 'px';
+            isGrounded = true; 
+            isDead = true; // In case he missed pipes and just hit the floor
+            showGameOver();
+        }
+
+        // CEILING COLLISION (Dies and falls)
+        if (tobyTop < 0 && !isDead) {
+            die();
         }
 
         requestAnimationFrame(gameLoop);
     }
 
     function createPipe() {
-        if (isGameOver) return;
+        if (isDead) return;
 
         const gameHeight = 600;
         const pipeGap = 250; 
@@ -283,7 +309,7 @@
         let passed = false;
 
         function movePipes() {
-            if (isGameOver) return;
+            if (isDead) return; // Stop moving pipes if dead
             
             pipeX -= pipeSpeed; 
             topPipe.style.left = pipeX + 'px';
@@ -293,12 +319,13 @@
             const topRect = topPipe.getBoundingClientRect();
             const botRect = bottomPipe.getBoundingClientRect();
 
+            // Check Pipe Collision
             if (tRect.right - 10 > topRect.left && tRect.left + 10 < topRect.right && 
                (tRect.top + 10 < topRect.bottom || tRect.bottom - 10 > botRect.top)) {
-                endGame();
+                die(); // Trigger the death fall!
             }
 
-            if (pipeX < 100 && !passed) {
+            if (pipeX < 100 && !passed && !isDead) {
                 score++;
                 scoreDisplay.innerText = "Score: " + score;
                 passed = true;
@@ -314,11 +341,28 @@
         movePipes();
     }
 
-    function endGame() {
-        if(isGameOver) return;
-        isGameOver = true;
-        clearInterval(pipeInterval); 
-        finalScore.innerText = score;
+    // TRIGGER DEATH PLUNGE
+    function die() {
+        if (isDead) return;
+        isDead = true;
+        clearInterval(pipeInterval); // Stop spawning pipes immediately
+        // Notice we DO NOT show the game over screen here. 
+        // Gravity will pull the dead Toby to the floor in the gameLoop!
+    }
+
+    // ACTUAL GAME OVER UI + HIGH SCORE
+    function showGameOver() {
+        // Read the highest score from the browser memory
+        let bestScore = localStorage.getItem('flappyTobyBest') || 0;
+        
+        // Update if you beat the record
+        if (score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('flappyTobyBest', bestScore);
+        }
+
+        // Display current score and the all-time best!
+        finalScore.innerHTML = score + "<br><span style='font-size:0.7em; color:white; font-weight:normal;'>Personal Best: " + bestScore + "</span>";
         gameOverContainer.style.visibility = 'visible';
     }
   </script>
