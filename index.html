@@ -32,8 +32,6 @@
       margin: 0;
       padding: 0;
       font-size: 20px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
@@ -41,19 +39,18 @@
       justify-content: center;
       align-items: center;
       background: linear-gradient(to right, #050b2b, #050b2b);
-      font-family: "PT Sans", sans-serif;
       overflow: hidden;
     }
 
     .wrapper {
-      max-width: 600px;
+      width: 90%;
+      max-width: 450px; /* Keeps the card perfectly sized */
       background: linear-gradient(to left, #306BAC, #141B41);
       color: white;
-      padding: 30px;
+      padding: 40px 30px;
       border-radius: 20px;
       box-shadow: 0px 0px 80px 1px #212129;
-      text-align: center;
-      animation: fadeIn 2s ease-in-out forwards;
+      animation: fadeIn 1.5s ease-in-out forwards;
       opacity: 0;
       position: relative;
     }
@@ -61,108 +58,120 @@
     .wrapper::before {
       content: '';
       position: absolute;
-      top: -20px;
-      left: -20px;
-      right: -20px;
-      bottom: -20px;
+      top: -15px;
+      left: -15px;
+      right: -15px;
+      bottom: -15px;
       border-radius: 30px;
       border: 2px solid rgba(255, 255, 255, 0.2);
       z-index: -1;
     }
 
+    /* Fixed image sizing to restore balance */
     .wrapper .image-wrapper img {
       width: 100%;
-      max-width: 400px;
+      max-width: 260px; /* Reduced from 400px so it fits the frame better */
       height: auto;
       border-radius: 20%;
       user-select: none;
-      border: 2px solid black;
+      border: 3px solid #050b2b;
       transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
       image-rendering: -webkit-optimize-contrast; 
       image-rendering: crisp-edges; 
+      margin-bottom: 5px;
     }
 
     .wrapper .image-wrapper img:hover {
-      transform: scale(1.1);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
     }
 
     .wrapper .name {
-      font-size: 2.2em;
-      animation: fadeIn 3s ease-in-out forwards;
+      font-size: 2.4em;
+      letter-spacing: 1px;
+      animation: fadeIn 2s ease-in-out forwards;
       opacity: 0;
     }
 
     .wrapper .description {
       color: #fafe18;
       text-transform: uppercase;
-      margin-top: 10px;
-      animation: fadeIn 3s ease-in-out forwards;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-top: 5px;
+      animation: fadeIn 2s ease-in-out forwards;
       opacity: 0;
-      animation-delay: 0.5s;
+      animation-delay: 0.3s;
     }
 
     .divider {
-      width: 80%;
+      width: 70%;
       margin: 20px auto;
       border: none;
-      border-top: 1px solid #fff;
-      opacity: 0.5;
+      border-top: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    .wrapper .download-button {
+    /* THE CLEANED UP GAME BUTTONS */
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .game-button {
       background: #fff;
       color: #212129;
-      text-transform: none;
-      font-size: 1.2em;
-      letter-spacing: 0.1em;
-      padding: 10px 45px;
-      border-radius: 30px;
+      font-size: 1.1em;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      padding: 12px 30px;
+      border-radius: 50px;
       transition: 300ms;
       user-select: none;
-      animation: fadeIn 3s ease-in-out forwards;
-      opacity: 0;
-      animation-delay: 1.5s;
       border: 2px solid transparent;
       
-      /* Keeps buttons looking uniform */
+      /* Keeps buttons on one line and perfectly aligned */
       display: inline-flex; 
       align-items: center; 
       justify-content: center; 
       gap: 8px;
-      width: 250px; 
+      min-width: 200px; 
+      white-space: nowrap; /* Forces text to stay on ONE line */
+      
+      /* Animations */
+      animation: fadeIn 2s ease-in-out forwards;
+      opacity: 0;
+      animation-delay: 0.8s;
     }
 
-    .wrapper .download-button:hover {
+    .game-button:hover {
       background: #fafe18;
       color: #141B41;
-      border-color: #141B41;
-      transition: 300ms;
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(250, 254, 24, 0.4);
     }
 
-    .wrapper .download-button .fa-fa-download {
-      margin-right: 5px;
-      margin-top: 15px;
+    .game-button .material-symbols-outlined {
+      font-size: 1.3em;
     }
 
     /* Media Query for Mobile */
     @media (max-width: 600px) {
       .wrapper {
-        margin: 20px;
+        padding: 30px 20px;
       }
-
       .wrapper .name {
-        font-size: 1.8em;
+        font-size: 2em;
       }
-
       .wrapper .description {
-        font-size: 1em;
+        font-size: 0.9em;
       }
-
-      .wrapper .download-button {
-        padding: 8px 35px;
+      .game-button {
+        padding: 10px 25px;
         font-size: 1em;
-        width: 220px;
+        min-width: 180px;
       }
     }
 
@@ -180,21 +189,19 @@
   <p class="description">Senor Salchicha</p>
       
   <hr class="divider">
-  <div class="spacer" style="height: 10px;"></div>
   
   <div class="image-wrapper">
     <img src="https://santon39.github.io/toby/toby_ikona.png" alt="Toby" />
       
     <hr class="divider">
-    <div class="spacer" style="height: 10px;"></div>
 
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+    <div class="button-container">
       
-      <a href="https://santon39.github.io/toby/game.html" class="download-button">
+      <a href="https://santon39.github.io/toby/game.html" class="game-button">
         <span class="material-symbols-outlined">play_circle</span> Toby Dash
       </a>
 
-      <a href="https://santon39.github.io/toby/flappy.html" class="download-button">
+      <a href="https://santon39.github.io/toby/flappy.html" class="game-button">
         <span class="material-symbols-outlined">play_circle</span> Flappy Toby
       </a>
 
