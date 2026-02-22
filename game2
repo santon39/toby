@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Toby</title>
+  <link rel="icon" href="toby.webp" type="image/x-icon">
+  <style>
+    :root {
+      --blue-dark: #050b2b;
+      --yellow-main: #fafe18;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #141B41 0%, #050b2b 100%);
+      color: white;
+      font-family: 'PT Sans', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-panel { text-align: center; }
+
+    .game-title {
+      color: var(--yellow-main);
+      margin: 0;
+      font-size: 2.5em;
+      letter-spacing: 2px;
+    }
+
+    /* CLASSIC SKY BLUE GAME BACKGROUND */
+    #game {
+      width: 1100px;
+      height: 600px; 
+      border-bottom: 5px solid #222; 
+      background: skyblue; 
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      cursor: pointer;
+    }
+
+    /* SHARED OVERLAY */
+    .overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(5, 11, 43, 0.95);
+      padding: 40px;
+      border-radius: 20px;
+      border: 3px solid var(--yellow-main);
+      text-align: center;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 0 50px rgba(0,0,0,0.9);
+      min-width: 450px;
+    }
+
+    #game-over-container { visibility: hidden; }
+
+    #game-over-msg { color: white; margin: 0; font-size: 1.8em; line-height: 1.2; }
+
+    /* YES / NO BUTTON STYLES */
+    .button-group {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      background: var(--yellow-main);
+      color: #050b2b;
+      border: none;
+      padding: 12px 45px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 1.3em;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn:hover { transform: scale(1.1); }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
+
+    /* SMALLER TOBY SPRITE */
+    #toby {
+      width: 80px;  
+      height: 80px; 
+      position: absolute;
+      left: 100px;
+      top: 250px;
+      z-index: 10;
+    }
+
+    /* CLASSIC GREEN PIPES */
+    .pipe {
+      position: absolute;
+      width: 100px;
+      background: #4CAF50; 
+      border: 4px solid #222; 
+      border-radius: 0; 
+      right: -120px;
+      box-sizing: border-box; 
+    }
+
+    /* SCORE UPDATED FOR THE BRIGHT SKY */
+    #score {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 38px; 
+      font-weight: bold;
+      color: white;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.6); 
+      z-index: 20;
+    }
+
+    @media (max-width: 950px) {
+      #game { width: 95vw; height: 600px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <div class="header-panel">
+      <h1 class="game-title">FLAPPY TOBY</h1>
+      <p style="color: white; font-family: sans-serif; margin-top: 5px;">Press SPACE or CLICK to flap!</p>
+    </div>
+
+    <div id="game">
+      <div id="score">Score: 0</div>
+      
+      <img id="toby" src="https://santon39.github.io/toby/toby.png" alt="Toby">
+      
+      <div id="start-screen" class="overlay">
+        <h1 style="color:var(--yellow-main); font-size: 3em; margin: 0;">READY?</h1>
+        <button onclick="startGame()" class="btn">Start Game</button>
+      </div>
+
+      <div id="game-over-container" class="overlay">
+        <h2 id="game-over-msg">Oh no, you hit a pipe! 😢</h2>
+        <h3 style="color: white; font-size: 1.5em; margin: 0;">Your score is: <span id="final-score" style="color: var(--yellow-main);">0</span></h3>
+        <h3 style="color: white; font-size: 1.3em; margin: 5px 0 15px 0;">Wanna try again?</h3>
+        
+        <div class="button-group">
+          <button onclick="resetGame(event)" class="btn">Yes</button>
+          <button onclick="goHome(event)" class="btn btn-outline">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toby = document.getElementById('toby');
+    const game = document.getElementById('game');
+    const scoreDisplay = document.getElementById('score');
+    const startScreen = document.getElementById('start-screen');
+    const gameOverContainer = document.getElementById('game-over-container');
+    const finalScore = document.getElementById('final-score');
+
+    let tobyTop = 230;
+    let gravity = 0.25; 
+    let velocity = 0;
+    let isGameOver = true;
+    let score = 0;
+    let pipeSpeed = 3.5; 
+    let pipeInterval; 
+
+    function startGame() {
+        isGameOver = false;
+        tobyTop = 230; 
+        velocity = 0;  
+        score = 0;
+        scoreDisplay.innerText = "Score: 0";
+        
+        toby.style.transform = "none";
+        
+        startScreen.style.visibility = 'hidden';
+        gameOverContainer.style.visibility = 'hidden';
+        
+        document.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+        
+        gameLoop();
+        
+        clearInterval(pipeInterval);
+        createPipe(); 
+        pipeInterval = setInterval(createPipe, 2000); 
+    }
+
+    function resetGame(e) {
+        if (e) e.stopPropagation(); 
+        startGame();
+    }
+
+    function goHome(e) {
+        if (e) e.stopPropagation();
+        window.location.href = "https://santon39.github.io/toby/index.html";
+    }
+
+    function flap(e) {
+        if (isGameOver) return;
+        if (e && e.target.tagName === 'BUTTON') return; 
+        
+        velocity = -6; 
+    }
+
+    window.addEventListener('keydown', (e) => { 
+      if(e.code === 'Space') { e.preventDefault(); flap(); }
+    });
+    game.addEventListener('mousedown', flap);
+    game.addEventListener('touchstart', flap);
+
+    function gameLoop() {
+        if (isGameOver) return;
+
+        velocity += gravity;
+        
+        // Terminal velocity: Toby won't fall like a rocket anymore!
+        if (velocity > 4.5) {
+            velocity = 4.5;
+        }
+        
+        tobyTop += velocity;
+        toby.style.top = tobyTop + 'px';
+
+        if (tobyTop > 520 || tobyTop < 0) {
+            endGame();
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function createPipe() {
+        if (isGameOver) return;
+
+        const gameHeight = 600;
+        const pipeGap = 250; 
+        const minPipeHeight = 50; 
+        
+        const maxTopHeight = gameHeight - pipeGap - minPipeHeight; 
+        const topHeight = Math.floor(Math.random() * (maxTopHeight - minPipeHeight + 1)) + minPipeHeight;
+        const bottomHeight = gameHeight - topHeight - pipeGap;
+
+        const topPipe = document.createElement('div');
+        topPipe.classList.add('pipe');
+        topPipe.style.height = topHeight + 'px';
+        topPipe.style.top = '0';
+        topPipe.style.borderTop = "none"; 
+
+        const bottomPipe = document.createElement('div');
+        bottomPipe.classList.add('pipe');
+        bottomPipe.style.height = bottomHeight + 'px';
+        bottomPipe.style.bottom = '0';
+        bottomPipe.style.borderBottom = "none"; 
+
+        game.appendChild(topPipe);
+        game.appendChild(bottomPipe);
+
+        let pipeX = 1100; 
+        let passed = false;
+
+        function movePipes() {
+            if (isGameOver) return;
+            
+            pipeX -= pipeSpeed; 
+            topPipe.style.left = pipeX + 'px';
+            bottomPipe.style.left = pipeX + 'px';
+
+            const tRect = toby.getBoundingClientRect();
+            const topRect = topPipe.getBoundingClientRect();
+            const botRect = bottomPipe.getBoundingClientRect();
+
+            if (tRect.right - 10 > topRect.left && tRect.left + 10 < topRect.right && 
+               (tRect.top + 10 < topRect.bottom || tRect.bottom - 10 > botRect.top)) {
+                endGame();
+            }
+
+            if (pipeX < 100 && !passed) {
+                score++;
+                scoreDisplay.innerText = "Score: " + score;
+                passed = true;
+            }
+
+            if (pipeX < -150) {
+                topPipe.remove();
+                bottomPipe.remove();
+            } else {
+                requestAnimationFrame(movePipes);
+            }
+        }
+        movePipes();
+    }
+
+    function endGame() {
+        if(isGameOver) return;
+        isGameOver = true;
+        clearInterval(pipeInterval); 
+        finalScore.innerText = score;
+        gameOverContainer.style.visibility = 'visible';
+    }
+  </script>
+</body>
+</html>
