@@ -44,7 +44,7 @@
 
     .wrapper {
       width: 90%;
-      max-width: 450px; /* Keeps the card perfectly sized */
+      max-width: 450px;
       background: linear-gradient(to left, #306BAC, #141B41);
       color: white;
       padding: 40px 30px;
@@ -67,10 +67,9 @@
       z-index: -1;
     }
 
-    /* Fixed image sizing to restore balance */
     .wrapper .image-wrapper img {
       width: 100%;
-      max-width: 260px; /* Reduced from 400px so it fits the frame better */
+      max-width: 260px; 
       height: auto;
       border-radius: 20%;
       user-select: none;
@@ -111,7 +110,6 @@
       border-top: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    /* THE CLEANED UP GAME BUTTONS */
     .button-container {
       display: flex;
       flex-direction: column;
@@ -132,13 +130,13 @@
       user-select: none;
       border: 2px solid transparent;
       
-      /* Keeps buttons on one line and perfectly aligned */
+      /* FIXED SIZING: Forces both buttons to be exactly this wide */
       display: inline-flex; 
       align-items: center; 
       justify-content: center; 
       gap: 8px;
-      min-width: 200px; 
-      white-space: nowrap; /* Forces text to stay on ONE line */
+      width: 240px; 
+      white-space: nowrap; 
       
       /* Animations */
       animation: fadeIn 2s ease-in-out forwards;
@@ -171,7 +169,7 @@
       .game-button {
         padding: 10px 25px;
         font-size: 1em;
-        min-width: 180px;
+        width: 200px; /* FIXED SIZING FOR MOBILE */
       }
     }
 
